@@ -1,15 +1,22 @@
 var test = require('tape')
 var store = require('./')
 var blobs = store('./test/data')
-var raco = require('raco')
+var fs = require('fs')
 
-test('putText getText', (t) => {
-  blobs.putText('test/foo.txt', 'bar', (err) => {
+test('put get', (t) => {
+  blobs.put('test/foo', 'bar', (err) => {
     t.error(err)
-    blobs.getText('test/foo.txt', (err, text) => {
+    blobs.get('test/foo', (err, val) => {
       t.error(err)
-      t.equal(text, 'bar')
-      t.end()
+      t.equal(val, 'bar')
+      blobs.remove('test/foo', (err) => {
+        t.error(err)
+        blobs.getToWriteStream('test/foo', fs.createWriteStream('dev/null'), (err, val) => {
+          t.ok(err.notFound)
+          t.notOk(val)
+          t.end()
+        })
+      })
     })
   })
 })

@@ -16,6 +16,7 @@
     "tape": "^4.6.3"
   },
   "dependencies": {
+    "errno": "^0.1.4",
     "mkdirp": "^0.5.1",
     "pump": "^1.0.2",
     "raco": "^3.2.2"
