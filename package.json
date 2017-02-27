@@ -16,10 +16,8 @@
     "tape": "^4.6.3"
   },
   "dependencies": {
-    "end-of-stream": "^1.1.0",
     "mkdirp": "^0.5.1",
     "pump": "^1.0.2",
-    "raco": "^3.2.2",
-    "throat": "^3.0.0"
+    "raco": "^3.2.2"
   }
 }

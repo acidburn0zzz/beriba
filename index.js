@@ -1,18 +1,8 @@
 var pump = require('pump')
 var raco = require('raco')({ prepend: true })
 var fs = require('fs')
-var throat = require('throat')
-var eos = require('end-of-stream')
 var path = require('path')
 var mkdirp = require('mkdirp')
-
-var unlinkQueue = throat(1, raco.wrap(function * (next, filepath) {
-  return yield fs.unlink(filepath, (err) => {
-    if (err && err.code === 'ENOENT') return next(null, false)
-    else if (err) return next(err)
-    else return next(null, true)
-  })
-}))
 
 function Blobs (base, opts) {
   if (!(this instanceof Blobs)) return new Blobs(base, opts)
@@ -62,25 +52,6 @@ Blobs.prototype.putFromFile = function * (next, key, filepath) {
   yield pump(readStream, writeStream, next)
 }
 
-Blobs.prototype.putText = function * (next, key, text) {
-  var keypath = this._getPath(key)
-  if (this._opts.mkdirp !== false) {
-    yield mkdirp(path.dirname(keypath), next)
-  }
-  return yield fs.writeFile(keypath, text, {
-    encoding: 'utf8',
-    mode: '0666',
-    flag: 'w'
-  }, next)
-}
-
-Blobs.prototype.getText = function * (next, key) {
-  return yield fs.readFile(this._getPath(key), {
-    encoding: 'utf8',
-    flag: 'r'
-  }, next)
-}
-
 Blobs.prototype.exists = function * (next, key) {
   return yield fs.stat(this._getPath(key), (err) => {
     if (err && err.code === 'ENOENT') return next(null, false)
@@ -89,30 +60,13 @@ Blobs.prototype.exists = function * (next, key) {
   })
 }
 
-Blobs.prototype.head = function * (next, key) {
-  return yield fs.stat(this._getPath(key), next)
+Blobs.prototype.remove = function * (next, key) {
+  return yield fs.unlink(this._getPath(key), (err) => {
+    if (err && err.code === 'ENOENT') return next(null, false)
+    else if (err) return next(err)
+    else return next(null, true)
+  })
 }
-
-Blobs.prototype.removeOnEnd = function * (next, res, filepath) {
-  if (typeof res === 'function') { // if function
-    if (res.length === 1) {
-      try {
-        yield res.call(this, next)
-        unlinkQueue(filepath)
-      } catch (err) {
-        unlinkQueue(filepath)
-        throw err
-      }
-    } else {
-    }
-  } else { // if stream
-    eos(res, () => {
-      unlinkQueue(filepath)
-    })
-  }
-}
-
-Blobs.prototype.tmpname = function () {}
 
 raco.wrapAll(Blobs.prototype)
 
