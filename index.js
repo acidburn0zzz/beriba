@@ -13,22 +13,8 @@ function Blobs (base, opts) {
 
 Blobs.prototype._getPath = function (key) {
   var filepath = path.join(this._base, key)
-  if (filepath.indexOf(this._base) !== 0) {
-    throw new errors.KeyError('Invalid key')
-  }
+  if (filepath.indexOf(this._base) !== 0) throw new errors.KeyError(`Invalid key ${key}`)
   return filepath
-}
-
-Blobs.prototype.putFromReadStream = function * (next, key, readStream) {
-  var keypath = this._getPath(key)
-  if (this._opts.mkdirp !== false) {
-    yield mkdirp(path.dirname(keypath), next)
-  }
-  var writeStream = fs.createWriteStream(keypath)
-  yield pump(readStream, writeStream, next)
-  return {
-    size: writeStream.bytesWritten
-  }
 }
 
 Blobs.prototype.getToWriteStream = function * (next, key, writeStream, size) {
@@ -58,6 +44,18 @@ Blobs.prototype.get = function * (next, key) {
     else if (err) return next(err)
     else return next(null, val)
   })
+}
+
+Blobs.prototype.putFromReadStream = function * (next, key, readStream) {
+  var keypath = this._getPath(key)
+  if (this._opts.mkdirp !== false) {
+    yield mkdirp(path.dirname(keypath), next)
+  }
+  var writeStream = fs.createWriteStream(keypath)
+  yield pump(readStream, writeStream, next)
+  return {
+    size: writeStream.bytesWritten
+  }
 }
 
 Blobs.prototype.putFromFile = function * (next, key, filepath) {
