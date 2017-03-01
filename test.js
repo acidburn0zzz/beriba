@@ -1,3 +1,5 @@
+'use strict'
+
 var test = require('tape')
 var store = require('./')
 var blobs = store('./test/data')
