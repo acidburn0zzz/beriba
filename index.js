@@ -3,13 +3,13 @@ var storage = [
   require('./storage/fs')
 ]
 
-function Blobs (base, opts) {
-  for (var Store of storage) {
-    if (Store.match(base)) return new Store(base, opts)
+function beriba (base, opts) {
+  for (var Storage of storage) {
+    if (Storage.match(base)) return new Storage(base, opts)
   }
   throw new errors.BlobError('Unidentified storage')
 }
 
-Blobs.errors = errors
+beriba.errors = errors
 
-module.exports = Blobs
+module.exports = beriba

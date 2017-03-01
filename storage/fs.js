@@ -7,7 +7,7 @@ var path = require('path')
 var mkdirp = require('mkdirp')
 var errors = require('../errors')
 
-class Store {
+class FileStorage {
   constructor (base, opts) {
     this._base = path.resolve(base)
     this._opts = opts || {}
@@ -41,17 +41,6 @@ class Store {
     })
   }
 
-  * get (next, key) {
-    return yield fs.readFile(this._getPath(key), {
-      encoding: 'utf8',
-      flag: 'r'
-    }, (err, val) => {
-      if (err && err.code === 'ENOENT') return next(new errors.NotFoundError(`Key ${key} not found`, err))
-      else if (err) return next(err)
-      else return next(null, val)
-    })
-  }
-
   * putFromReadStream (next, key, readStream) {
     var keypath = this._getPath(key)
     if (this._opts.mkdirp !== false) {
@@ -74,19 +63,6 @@ class Store {
     yield pump(readStream, writeStream, next)
   }
 
-  * put (next, key, val) {
-    console.log(key, val)
-    var keypath = this._getPath(key)
-    if (this._opts.mkdirp !== false) {
-      yield mkdirp(path.dirname(keypath), next)
-    }
-    return yield fs.writeFile(keypath, val, {
-      encoding: 'utf8',
-      mode: '0666',
-      flag: 'w'
-    }, next)
-  }
-
   * exists (next, key) {
     return yield fs.stat(this._getPath(key), (err) => {
       if (err && err.code === 'ENOENT') return next(null, false)
@@ -104,6 +80,6 @@ class Store {
   }
 }
 
-raco.wrapAll(Store.prototype)
+raco.wrapAll(FileStorage.prototype)
 
-module.exports = Store
+module.exports = FileStorage
