@@ -5,6 +5,7 @@ var raco = require('raco')({ prepend: true })
 var fs = require('fs')
 var path = require('path')
 var mkdirp = require('mkdirp')
+var duplexify = require('duplexify')
 var errors = require('../errors')
 
 class FileStorage {
@@ -23,12 +24,28 @@ class FileStorage {
     return filepath
   }
 
+  createReadStream (key) {
+    var proxy = duplexify()
+    var destroy = proxy.destroy
+    // standarize notFound error
+    proxy.destroy = function (err) {
+      if (err && err.code === 'ENOENT') {
+        return destroy.call(proxy, new errors.NotFoundError(`Key ${key} not found`, err))
+      } else {
+        return destroy.call(proxy, err)
+      }
+    }
+    try {
+      proxy.setReadable(fs.createReadStream(this._getPath(key)))
+    } catch (err) {
+      proxy.destroy(err)
+    }
+    return proxy
+  }
+
   * getToWriteStream (next, key, writeStream, size) {
-    var readStream = fs.createReadStream(this._getPath(key))
-    yield pump(readStream, writeStream, (err) => {
-      if (err && err.code === 'ENOENT') return next(new errors.NotFoundError(`Key ${key} not found`, err))
-      else return next(err)
-    })
+    var readStream = this.createReadStream(key)
+    yield pump(readStream, writeStream, next)
   }
 
   * getToFile (next, key, filepath) {

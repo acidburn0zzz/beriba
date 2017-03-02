@@ -23,8 +23,8 @@ var teardown = (t, cb) => rimraf(dir, cb)
 var test = (title, genFn) => {
   tape(title, (t) => setup(t, (err) => {
     t.error(err)
-    raco.wrap(genFn)(t, () => {
-      teardown(t, (err) => t.end(err))
+    raco.wrap(genFn)(t, (err) => {
+      teardown(t, () => t.end(err))
     })
   }))
 }
