@@ -7,11 +7,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:cshum/simple-blob.git"
+    "url": "git@github.com:cshum/beriba.git"
   },
   "author": "Adrian C Shum <adrian@cshum.com>",
   "license": "MIT",
   "devDependencies": {
+    "rimraf": "^2.6.1",
     "standard": "^8.6.0",
     "tape": "^4.6.3"
   },

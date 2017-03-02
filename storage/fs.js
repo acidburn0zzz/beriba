@@ -61,6 +61,9 @@ class FileStorage {
     var readStream = fs.createReadStream(filepath)
     var writeStream = fs.createWriteStream(keypath)
     yield pump(readStream, writeStream, next)
+    return {
+      size: writeStream.bytesWritten
+    }
   }
 
   * exists (next, key) {
