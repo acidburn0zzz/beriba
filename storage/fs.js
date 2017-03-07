@@ -6,7 +6,7 @@ var fs = require('fs')
 var path = require('path')
 var mkdirp = require('mkdirp')
 var duplexify = require('duplexify')
-var eos = require('end-of-stream')
+var writify = require('writify')
 var errors = require('../errors')
 
 class FileStorage {
@@ -55,21 +55,21 @@ class FileStorage {
   }
 
   createWriteStream (key) {
-    var proxy = duplexify()
-    proxy.setReadable(false)
     var keypath, writeStream
-    try {
-      keypath = this._getPath(key)
-    } catch (err) {
-      proxy.destroy(err)
-    }
-    this._mkdirp(keypath, (err) => {
-      if (err) return proxy.destroy(err)
-      writeStream = fs.createWriteStream(keypath)
-      eos(writeStream, (err) => {
-        if (!err) proxy.size = writeStream.bytesWritten
+    var proxy = writify((cb) => {
+      try {
+        keypath = this._getPath(key)
+      } catch (err) {
+        return cb(err)
+      }
+      this._mkdirp(keypath, (err) => {
+        if (err) return cb(err)
+        writeStream = fs.createWriteStream(keypath)
+        cb(null, writeStream)
       })
-      proxy.setWritable(writeStream)
+    }, (cb) => {
+      proxy.size = writeStream.bytesWritten
+      cb()
     })
     return proxy
   }
