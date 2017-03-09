@@ -6,7 +6,8 @@ var fs = require('fs')
 var path = require('path')
 var mkdirp = require('mkdirp')
 var duplexify = require('duplexify')
-var writify = require('writify')
+var readsy = require('readsy')
+var writsy = require('writsy')
 var errors = require('../errors')
 
 class FileStorage {
@@ -35,28 +36,27 @@ class FileStorage {
   }
 
   createReadStream (key) {
-    var proxy = duplexify()
-    proxy.setWritable(false)
-    var destroy = proxy.destroy
+    var proxy = readsy((cb) => {
+      try {
+        cb(null, fs.createReadStream(this._getPath(key)))
+      } catch (err) {
+        cb(err)
+      }
+    })
     // standarize notFound error
     proxy.destroy = function (err) {
       if (err && err.code === 'ENOENT') {
         return destroy.call(proxy, new errors.NotFoundError(`Key ${key} not found`, err))
       } else {
-        return destroy.call(proxy, err)
+        return readsy.prototype.destroy.call(proxy, err)
       }
-    }
-    try {
-      proxy.setReadable(fs.createReadStream(this._getPath(key)))
-    } catch (err) {
-      proxy.destroy(err)
     }
     return proxy
   }
 
   createWriteStream (key) {
     var keypath, writeStream
-    var proxy = writify((cb) => {
+    var proxy = writsy((cb) => {
       try {
         keypath = this._getPath(key)
       } catch (err) {

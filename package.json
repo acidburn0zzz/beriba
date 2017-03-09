@@ -17,11 +17,11 @@
     "tape": "^4.6.3"
   },
   "dependencies": {
-    "duplexify": "^3.5.0",
     "errno": "^0.1.4",
     "mkdirp": "^0.5.1",
     "pump": "^1.0.2",
     "raco": "^3.2.3",
-    "writify": "^0.1.0"
+    "readsy": "^0.1.0",
+    "writsy": "^1.0.0"
   }
 }
