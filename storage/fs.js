@@ -5,7 +5,6 @@ var raco = require('raco')({ prepend: true })
 var fs = require('fs')
 var path = require('path')
 var mkdirp = require('mkdirp')
-var duplexify = require('duplexify')
 var readsy = require('readsy')
 var writsy = require('writsy')
 var errors = require('../errors')
@@ -45,11 +44,12 @@ class FileStorage {
     })
     // standarize notFound error
     proxy.destroy = function (err) {
-      if (err && err.code === 'ENOENT') {
-        return destroy.call(proxy, new errors.NotFoundError(`Key ${key} not found`, err))
-      } else {
-        return readsy.prototype.destroy.call(proxy, err)
-      }
+      return readsy.prototype.destroy.call(
+        proxy,
+        err && err.code === 'ENOENT'
+        ? new errors.NotFoundError(`Key ${key} not found`, err)
+        : err
+      )
     }
     return proxy
   }
